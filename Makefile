@@ -1,17 +1,17 @@
-CFLAGS = -D ISH_USE_STDLIB=1 -std=c99
+CFLAGS  = -O3 -D ISH_USE_STDLIB=1 -std=gnu99
+LDFLAGS =
+
+TARGET  = ish
+OBJECTS = ish.o ish_utilities.o ish_syscalls.o
 
 .PHONY : all clean
 
-all : ish
+all : $(TARGET)
 
-ish : ish.o ish_utilities.o ish_syscalls.o
+$(TARGET) : $(OBJECTS)
 
-ish.o : ish.c
-
-ish_utilities.o : ish_utilities.c
-
-ish_syscalls.o : ish_syscalls.c
+$(OBJECTS) : %.o : %.c
 
 clean :
-	rm -rf ish ish.o ish_utilities.o ish_syscalls.o
+	rm -rf $(TARGET) $(OBJECTS)
 

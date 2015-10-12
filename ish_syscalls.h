@@ -21,12 +21,32 @@
         `man syscalls`
         `man 2 <system call name>`
 
-    x86/x86-64 System Call Tables
+    Linux x86-64 System Call Tables
 
-        `syscall_32.tbl`
         `syscall_64.tbl`
 
         https://github.com/torvalds/linux/tree/master/arch/x86/entry/syscalls
+
+    For extra points you can implement calls for other CPU architectures. You
+    need to research kernel and function calling conventions on your own.
+
+    Linux x86 System Call Tables
+
+        `syscall_32.tbl`
+
+        https://github.com/torvalds/linux/tree/master/arch/x86/entry/syscalls
+
+    Linux ARMv7-A System Call Tables from Android Bionic libc
+
+        `unistd.h`
+
+        https://github.com/android/platform_bionic/blob/master/libc/kernel/uapi/asm-arm/asm
+
+    Linux ARMv8-A System Call Tables from Android Bionic libc
+
+        `unistd.h`
+
+        https://github.com/android/platform_bionic/blob/master/libc/kernel/uapi/asm-generic
 */
 
 long ish_read(
@@ -41,3 +61,4 @@ long ish_read(
 */
 
 #endif
+

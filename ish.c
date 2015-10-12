@@ -46,9 +46,6 @@ static const char Fork_Error_Message[] =
 */
 int main(int argc, char **argv, char **envp)
 {
-    char input_string[Max_Input_String_Length + 1];
-    input_string[Max_Input_String_Length] = '\0';
-
     /* Extract the home directory path for the current user */
     char *home = 0;
     for (char **cursor = envp; *cursor; ++cursor) {
@@ -66,20 +63,23 @@ int main(int argc, char **argv, char **envp)
     }
 
     /* Extract the list of directories where executable programs are located. */
-    char *path = 0;
+    char *paths = 0;
     for (char **cursor = envp; *cursor; ++cursor) {
         if (ish_cstring_starts_with_ignoring_case(
                 Environment_Variable_Path,
                 *cursor
             )) {
-            path =
+            paths =
                 *cursor;
-            path +=
+            paths +=
                 sizeof(Environment_Variable_Path);
 
             break;
         }
     }
+
+    char input[Max_Input_String_Length + 1];
+    input[Max_Input_String_Length] = '\0';
 
     /*
         `read` tries to write a fixed number of bytes into a
@@ -90,10 +90,10 @@ int main(int argc, char **argv, char **envp)
 
         `man 2 read`
     */
-    while (read(0, input_string, Max_Input_String_Length) >= 0) {
+    while (read(0, input, Max_Input_String_Length) >= 0) {
         /* Mark the 'new line' character as the end of the C string. */
         ish_replace_first_character_in_cstring(
-            input_string, '\n', '\0'
+            input, '\n', '\0'
         );
 
         char *arguments[Max_Argument_Count + 1];
@@ -101,7 +101,7 @@ int main(int argc, char **argv, char **envp)
 
         /* Build a null-terminated array of arguments from the input string. */
         unsigned long argument_index = 0;
-        for (char *cursor = input_string;
+        for (char *cursor = input;
                 cursor && argument_index < Max_Argument_Count;
                     ++argument_index) {
             arguments[argument_index] =
@@ -156,7 +156,7 @@ int main(int argc, char **argv, char **envp)
                             );
 
                 /*
-                    `exit` asks the system to unload the process with a 
+                    `exit` asks the system to unload the process with a
                     provided status code. The status code can be received,
                     analyzed, and processed by a parent process
                     (see `waitpid`).
@@ -174,9 +174,12 @@ int main(int argc, char **argv, char **envp)
 
                 /*
                     Check whether the specified executable exists or search
-                    for it through the directories in the 'PATH' environment
+                    for it through directories in the 'PATH' environment
                     variable.
                 */
+
+                char candidate[Max_Executable_Path_Length + 1];
+                candidate[Max_Executable_Path_Length] = '\0';
 
                 /*
                     `stat` obtains information about a file pointed to by
@@ -186,64 +189,28 @@ int main(int argc, char **argv, char **envp)
 
                     `man 2 stat`
                 */
-                struct stat stat_buffer;
-                if (!stat(executable, &stat_buffer) == 0) {
+                struct stat stat_result;
+                if (!stat(executable, &stat_result) == 0) {
                     executable = 0;
+                    for (char *cursor = paths; cursor && !executable; ) {
+                        char *path =
+                            ish_get_token_in_cstring(
+                                cursor,
+                                ish_is_path_separator,
+                                &cursor
+                            );
 
-                    char executable_path[Max_Executable_Path_Length + 1];
-                    executable_path[Max_Executable_Path_Length] = '\0';
+                        if (path) {
+                            ish_combine_path_elements(
+                                path,
+                                arguments[0],
+                                candidate,
+                                Max_Executable_Path_Length
+                            );
 
-                    if (path) {
-                        for (char *cursor = path; cursor && !executable; ) {
-                            char *path_token =
-                                ish_get_token_in_cstring(
-                                    cursor,
-                                    ish_is_path_separator,
-                                    &cursor
-                                );
-
-                            if (path_token) {
-                                unsigned long path_index = 0;
-                                while(
-                                    path_index <
-                                        Max_Executable_Path_Length &&
-                                            *path_token &&
-                                                !ish_is_path_separator(
-                                                    *path_token
-                                                )
-                                ) {
-                                    executable_path[path_index] =
-                                        *path_token;
-
-                                    ++path_index, ++path_token;
-                                }
-
-                                if (path_index <
-                                        Max_Executable_Path_Length) {
-                                    executable_path[path_index++] =
-                                        ISH_Directory_Separator;
-                                }
-
-                                char *filename =
-                                    arguments[0];
-
-                                while(
-                                    path_index <
-                                        Max_Executable_Path_Length &&
-                                            *filename
-                                ) {
-                                    executable_path[path_index] =
-                                        *filename;
-
-                                    ++path_index, ++filename;
-                                }
-
-                                executable_path[path_index] = '\0';
-
-                                if (stat(executable_path, &stat_buffer) == 0) {
-                                    executable =
-                                        executable_path;
-                                }
+                            if (stat(candidate, &stat_result) == 0) {
+                                executable =
+                                    candidate;
                             }
                         }
                     }
@@ -272,12 +239,18 @@ int main(int argc, char **argv, char **envp)
                             should be the file name of the executable (with or
                             without the path).
 
-                            Environment variables such as `HOME` and `PATH` go
-                            as the last parameter.
+                            Array of environment variables such as `HOME` and
+                            `PATH` goes as the last parameter.
 
                             `man 2 execve`
                         */
                         execve(executable, arguments, envp);
+
+                        /*
+                            `exit` here is only reached on unsuccessful
+                            `execve`.
+                        */
+                        exit(-1);
                     } else if (pid > 0) {
                         /*
                             A positive Process ID (PID) from the `fork` call
@@ -312,9 +285,7 @@ int main(int argc, char **argv, char **envp)
 
                             `man 2 write`
                         */
-                        write(
-                            2, Fork_Error_Message, sizeof(Fork_Error_Message)
-                        );
+                        write(2, Fork_Error_Message, sizeof(Fork_Error_Message));
                     }
                 }
             }

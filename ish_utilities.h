@@ -72,4 +72,12 @@ int ish_get_integer_from_cstring(
         const char *string
     );
 
+void ish_combine_path_elements(
+         const char *path_element,
+         const char *another_path_element,
+         char *combined_path,
+         unsigned long maximum_combined_path_length
+     );
+
 #endif
+

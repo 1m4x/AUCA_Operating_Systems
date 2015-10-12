@@ -246,7 +246,7 @@ int ish_get_integer_from_cstring(const char *string)
 
     while (ish_is_digit(*string)) {
         result =
-            result * 10 + (*string - '0');
+            result * 10 + (*string++ - '0');
     }
 
     if (negative) {
@@ -256,3 +256,41 @@ int ish_get_integer_from_cstring(const char *string)
 
     return result;
 }
+
+void ish_combine_path_elements(
+         const char *path_element,
+         const char *another_path_element,
+         char *combined_path,
+         unsigned long maximum_combined_path_length
+     )
+{
+    ish_check(path_element && another_path_element && combined_path);
+
+    unsigned long i = 0;
+    while(
+        i < maximum_combined_path_length &&
+            *path_element &&
+                !ish_is_path_separator(
+                    *path_element
+                 )
+    ) {
+        combined_path[i++] =
+            *path_element++;
+    }
+
+    if (i < maximum_combined_path_length) {
+        combined_path[i++] =
+            ISH_Directory_Separator;
+    }
+
+    while(
+        i < maximum_combined_path_length &&
+            *another_path_element
+    ) {
+        combined_path[i++] =
+            *another_path_element++;
+    }
+
+    combined_path[i] = '\0';
+}
+

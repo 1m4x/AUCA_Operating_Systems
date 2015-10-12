@@ -96,7 +96,39 @@ long ish_read(
         // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
     */
 
+#if defined(__i386__) || defined(__x86_64__)
+    #if defined(__APPLE__)
+        #if defined(__x86_64__)
+
+        #elif defined(__i386__)
+
+        #endif
+    #elif defined(__linux__)
+        #if defined(__x86_64__)
+
+        #elif defined(__i386__)
+
+        #endif
+    #endif
     return -1;
+#elif defined(__arm__) || defined(__aarch64__)
+    #if defined(__APPLE__)
+        #if defined(__aarch64__)
+
+        #elif defined(__arm__)
+
+        #endif
+    #elif defined(__linux__)
+        #if defined(__aarch64__)
+
+        #elif defined(__arm__)
+
+        #endif
+    #endif
+    return -1;
+#else
+    return -1;
+#endif
 }
 
 /*
@@ -107,3 +139,4 @@ long ish_read(
 
     ...
 */
+
