@@ -10,9 +10,13 @@
         `ish_chdir`
         `ish_exit`
         `ish_stat`
+        `ish_open`
+        `ish_creat`
+        `ish_dup2`
+        `ish_close`
         `ish_fork`
         `ish_execve`
-        `ish_waitpid`
+        `ish_waitpid` (implement through the `wait4` system call)
         `ish_write`
 
     Documentation
@@ -40,13 +44,15 @@
 
         `unistd.h`
 
-        https://github.com/android/platform_bionic/blob/master/libc/kernel/uapi/asm-arm/asm
+        https://github.com/android/platform_bionic/blob/master/libc/kernel/
+            uapi/asm-arm/asm
 
     Linux ARMv8-A System Call Tables from Android Bionic libc
 
         `unistd.h`
 
-        https://github.com/android/platform_bionic/blob/master/libc/kernel/uapi/asm-generic
+        https://github.com/android/platform_bionic/blob/master/libc/kernel/
+            uapi/asm-generic
 */
 
 long ish_read(
@@ -61,4 +67,3 @@ long ish_read(
 */
 
 #endif
-

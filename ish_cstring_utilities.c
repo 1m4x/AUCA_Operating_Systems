@@ -1,4 +1,23 @@
-#include "ish_utilities.h"
+#include "ish_cstring_utilities.h"
+
+unsigned long ish_get_cstring_length(
+                  const char *string
+              )
+{
+    ish_check(string);
+
+    unsigned long result = 0;
+
+    const char *start =
+        string;
+
+    for ( ; *string; ++string);
+
+    result =
+        (unsigned long) (string - start);
+
+    return result;
+}
 
 char *ish_replace_first_character_in_cstring(
           char *string,
@@ -293,4 +312,3 @@ void ish_combine_path_elements(
 
     combined_path[i] = '\0';
 }
-

@@ -1,15 +1,7 @@
-#ifndef ISH_UTILITIES_H
-#define ISH_UTILITIES_H
+#ifndef ISH_CSTRING_UTILITIES_H
+#define ISH_CSTRING_UTILITIES_H
 
-#ifdef ISH_USE_STDLIB
-    #include <unistd.h>
-    #include <sys/types.h>
-    #include <sys/wait.h>
-    #include <sys/stat.h>
-    #include <stdlib.h>
-#else
-    #include "ish_syscalls.h"
-#endif
+#include "ish_common.h"
 
 static const char ISH_Directory_Separator = '/';
 static const char ISH_Path_Separator      = ':';
@@ -19,7 +11,9 @@ static const char ISH_Path_Separator      = ':';
     library to break the dependency on it.
 */
 
-#define ish_check(value) do { if (!(value)) exit(-1); } while(0)
+unsigned long ish_get_cstring_length(
+                  const char *string
+              );
 
 char *ish_replace_first_character_in_cstring(
           char *string,
@@ -80,4 +74,3 @@ void ish_combine_path_elements(
      );
 
 #endif
-

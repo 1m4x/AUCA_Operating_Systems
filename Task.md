@@ -26,10 +26,11 @@
 
 In this task you need to perform a number of system calls on the x86-64
 architecture on Debian Linux. The calls are `read`, `chdir`, `exit`,
-`stat`, `fork`, `execve`, `waitpid`, and `write`. You have sources
-of a simple shell that uses the following calls through the system
-library. Your task is to implement your own functions `ish_read`,
-`ish_chdir`, `ish_exit`, `ish_stat`, `ish_fork`, `ish_execve`,
+`stat`, `open`, `creat`, `dup2`, `close`, `fork`, `execve`, `waitpid`,
+and `write`. You have sources of a simple shell that uses the following
+calls through the system library. Your task is to implement your own
+functions `ish_read`, `ish_chdir`, `ish_exit`, `ish_stat`, `ish_open`,
+`ish_creat`, `ish_dup2`, `ish_close`, `ish_fork`, `ish_execve`,
 `ish_waitpid`, `ish_write` in `ish_syscalls.c` and `ish_syscalls.h`
 to perform the calls to the kernel directly. By doing that, you will
 remove dependencies on the system library for the shell. Do not
@@ -53,7 +54,10 @@ forget to change all function calls in `ish.c`.
 * Test the shell by typing builtin commands such as `cd` and `exit`
   or different program names such as `ls` or `date` with an absolute
   path to the executable or without it, with parameters or without
-  them. Execute builtin commands or programs by pressing `Enter`.
+  them. You can add standard input or output redirection symbols such
+  as `<` or `>` for every program and provide the input or output
+  file names after them. In order to execute the builtin commands
+  or programs press `Enter`.
 
 ```
     ./ish
@@ -77,9 +81,10 @@ forget to change all function calls in `ish.c`.
 
 ```
     ./ish
-    cd /bin
-    ls -al --color
-    exit -1
+    cd /tmp
+    ls /bin > listing.txt
+    cat < listing.txt
+    exit 1
 ```
 
 * Remove compiled files.
@@ -94,5 +99,4 @@ forget to change all function calls in `ish.c`.
 
 2. Submit your work.
 
-   `git push`
-
+   `git push origin master`

@@ -43,10 +43,10 @@ long ish_read(
         long result;                                     // a C variable
 
         __asm__ __volatile__ (
-            "op-code<length suffix> %%source_register, %%destination_register\n\t"
-            "op-code<length suffix> $source_immediate, %%destination_register\n\t"
+            "op-code<length suffix> %%src_register, %%dest_register\n\t"
+            "op-code<length suffix> $immediate, %%dest_register\n\t"
             // ...
-            "op-code<length suffix> %<argument number>, %%destination_register\n\t"
+            "op-code<length suffix> %<argument number>, %%dest_register\n\t"
             "op-code"
             : "=a" (result)                              // output argument/s
             : "D" ((unsigned long) file_descriptor),     // input arguments
@@ -92,6 +92,9 @@ long ish_read(
         // | S :   %rsi, %esi, %si        |
         // | D :   %rdi, %edi, %di        |
         // +---+--------------------------+
+        //
+        // All registers used as input or output arguments should not be
+        // listed as clobbered.
         //
         // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
     */
@@ -139,4 +142,3 @@ long ish_read(
 
     ...
 */
-
