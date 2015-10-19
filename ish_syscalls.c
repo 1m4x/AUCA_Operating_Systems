@@ -26,18 +26,18 @@
 
     Refer to slides from Practice #2.
 */
-long ish_read(
+long ish_read( //read method using syscall
         int file_descriptor,
         void *buffer,
         unsigned long buffer_size
 	
      )
 {
-long result;
-asm volatile(
-"movq $0, %%rax;"
-"syscall"
-:"=a" (result)
+	long result;
+	asm volatile(
+	"movq $0, %%rax;"
+	"syscall"
+	:"=a" (result)
 );
 return result;
     /*
