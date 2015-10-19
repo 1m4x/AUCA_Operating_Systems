@@ -30,8 +30,16 @@ long ish_read(
         int file_descriptor,
         void *buffer,
         unsigned long buffer_size
+	
      )
 {
+long result;
+asm volatile(
+"movq $0, %%rax;"
+"syscall"
+:"=a" (result)
+);
+return result;
     /*
         // AT&T/UNIX GCC Inline Assembly Sample
 
