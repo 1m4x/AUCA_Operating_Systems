@@ -61,9 +61,10 @@ long ish_read(
         unsigned long buffer_size
      );
 
-/*
-    int ish_chdir(const char *path);
-    ...
-*/
+int ish_chdir(const char *path);
+
+void ish_exit(int status);
+
+int ish_stat(const char *path, void *buf);
 
 #endif

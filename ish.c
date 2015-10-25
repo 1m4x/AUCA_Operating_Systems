@@ -102,7 +102,7 @@ int main(int argc, char **argv, char **envp)
 
         `man 2 read`
     */
-    while (read(0, input, Max_Input_String_Length) >= 0) {
+    while (ish_read(0, input, Max_Input_String_Length) >= 0) {
         /*
             Mark the 'new line' character as the end of the C string.
         */
@@ -148,7 +148,7 @@ int main(int argc, char **argv, char **envp)
 
                         `man 2 chdir`
                     */
-                    chdir(directory);
+                    ish_chdir(directory);
                 }
             } else if (ish_are_cstrings_equal(
                            command,
@@ -168,7 +168,7 @@ int main(int argc, char **argv, char **envp)
 
                     `man 2 exit`
                 */
-                exit(exit_status);
+                ish_exit(exit_status);
             } else {
                 /*
                     Start a separate process.
@@ -194,8 +194,9 @@ int main(int argc, char **argv, char **envp)
 
                     `man 2 stat`
                 */
-                struct stat stat_result;
-                if (!stat(executable, &stat_result) == 0) {
+				char stat_result[144];
+                // struct stat stat_result;
+                if (!ish_stat(executable, stat_result) == 0) {
                     executable = 0;
                     for (char *cursor = paths; cursor && !executable; ) {
                         char *path =
@@ -213,7 +214,7 @@ int main(int argc, char **argv, char **envp)
                                 Max_Executable_Path_Length
                             );
 
-                            if (stat(candidate, &stat_result) == 0) {
+                            if (ish_stat(candidate, stat_result) == 0) {
                                 executable =
                                     candidate;
                             }
@@ -368,7 +369,7 @@ int main(int argc, char **argv, char **envp)
                             `exit` here is only reached on unsuccessful
                             `execve`.
                         */
-                        exit(-1);
+                        ish_exit(-1);
                     } else if (pid > 0) {
                         /*
                             A positive Process ID (PID) from the `fork` call

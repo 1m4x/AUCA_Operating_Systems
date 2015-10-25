@@ -1,105 +1,11 @@
 #include "ish_syscalls.h"
 
-/*
-    Function Calling Convention
-
-    On x86 (Linux, BSD, Mac OS X) arguments are passed on the stack and pushed
-    from right to left.
-
-        buffer_size is pushed first
-        the buffer pointer is pushed next
-        file_descriptor is pushed last
-
-    Result is returned in the eax register.
-
-    On x86-64 (Linux, BSD, Mac OS X) the first six integer or pointer
-    arguments are passed in registers rdi, rsi, rdx, rcx, r8, and r9.
-
-       file_descriptor goes to rdi
-       the buffer pointer goes to rsi
-       buffer_size goes to rdx
-
-    Result is returned in the rax register.
-
-    ---
-    Kernel Calling Convention
-
-    Refer to slides from Practice #2.
-*/
-long ish_read( //read method using syscall
+long ish_read(
         int file_descriptor,
         void *buffer,
         unsigned long buffer_size
-
      )
 {
-    /*
-        // AT&T/UNIX GCC Inline Assembly Sample
-
-        static const char Argument[] =                   // C constants
-            "some data";
-        static const unsigned long Another_Argument =
-            sizeof(Argument);
-
-        long result;                                     // a C variable
-
-        __asm__ __volatile__ (
-            "op-code<length suffix> %%src_register, %%dest_register\n\t"
-            "op-code<length suffix> $immediate, %%dest_register\n\t"
-            // ...
-            "op-code<length suffix> %<argument number>, %%dest_register\n\t"
-            "op-code"
-            : "=a" (result)                              // output argument/s
-            : "D" ((unsigned long) file_descriptor),     // input arguments
-              "S" (buffer),
-              "d" (buffer_size),
-              "r" (Argument), "r" (Another_Argument)
-            : "%used register", "%another used register" // clobbered registers
-        );
-
-        // `__asm__` and `__volatile__` could also be written as
-        // `asm`     and `volatile`.
-
-        // The `volatile` modifier tells the compiler not to remove or reorder
-        // the inlined assembly block during the compiler optimization step.
-
-        // <length suffixes>
-        //     'b'    'w'     's'     'l'     'q'
-        //      8 bit  16 bit  16 bit  32 bit  64 bit  integers
-        //                     32 bit  64 bit          floating point numbers
-
-        // Argument numbers go from top to bottom, from left to right
-        // starting from zero.
-        //
-        //     result           : %<argument number> = %0
-        //     file_descriptor  : ...                = %1
-        //     buffer           :                    = %2
-        //     buffer_size      :                    = %3
-        //     Argument         :                    = %4
-        //     Another_Argument :                    = %5
-
-        // The first quoted letter before the argument in brackets is a
-        // register constraint. It tells the compiler to provide the
-        // argument through that register.
-        //
-        // On X86/-64 the following register constraints are possible
-        // +---+--------------------------+
-        // | r :   any register           |
-        // +---+--------------------------+
-        // | a :   %rax, %eax, %ax, %al   |
-        // | b :   %rbx, %ebx, %bx, %bl   |
-        // | c :   %rcx, %ecx, %cx, %cl   |
-        // | d :   %rdx, %edx, %dx, %dl   |
-        // | S :   %rsi, %esi, %si        |
-        // | D :   %rdi, %edi, %di        |
-        // +---+--------------------------+
-        //
-        // All registers used as input or output arguments should not be
-        // listed as clobbered.
-        //
-        // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-    */
-
 #if defined(__i386__) || defined(__x86_64__)
     #if defined(__APPLE__)
         #if defined(__x86_64__)
@@ -109,13 +15,13 @@ long ish_read( //read method using syscall
         #endif
     #elif defined(__linux__)
         #if defined(__x86_64__)
-          long result;
-          asm volatile(
-            "movq $0, %%rax;"
-            "syscall"
-            :"=a" (result)
-        );
-      return result;
+			long result;
+			__asm__ volatile (
+					"movq &0, %%rax;"
+					"syscall"
+					:"=a" (result)
+			);
+			return result;
         #elif defined(__i386__)
 
         #endif
@@ -141,353 +47,126 @@ long ish_read( //read method using syscall
 #endif
 }
 
-long ish_chdir( //read method using syscall
-        int file_descriptor,
-        void *buffer,
-        unsigned long buffer_size
+void ish_exit(int status) {
+	#if defined(__i386__) || defined(__x86_64__)
+		#if defined(__APPLE__)
+			#if defined(__x86_64__)
 
-     )
-{
-    /*
-        // AT&T/UNIX GCC Inline Assembly Sample
+			#elif defined(__i386__)
 
-        static const char Argument[] =                   // C constants
-            "some data";
-        static const unsigned long Another_Argument =
-            sizeof(Argument);
+			#endif
+		#elif defined(__linux__)
+			#if defined(__x86_64__)
+				__asm__ volatile (
+					"movq &60, %%rax;"
+					"syscall"
+				);
+			#elif defined(__i386__)
 
-        long result;                                     // a C variable
+			#endif
+		#endif
+		return -1;
+	#elif defined(__arm__) || defined(__aarch64__)
+		#if defined(__APPLE__)
+			#if defined(__aarch64__)
 
-        __asm__ __volatile__ (
-            "op-code<length suffix> %%src_register, %%dest_register\n\t"
-            "op-code<length suffix> $immediate, %%dest_register\n\t"
-            // ...
-            "op-code<length suffix> %<argument number>, %%dest_register\n\t"
-            "op-code"
-            : "=a" (result)                              // output argument/s
-            : "D" ((unsigned long) file_descriptor),     // input arguments
-              "S" (buffer),
-              "d" (buffer_size),
-              "r" (Argument), "r" (Another_Argument)
-            : "%used register", "%another used register" // clobbered registers
-        );
+			#elif defined(__arm__)
 
-        // `__asm__` and `__volatile__` could also be written as
-        // `asm`     and `volatile`.
+			#endif
+		#elif defined(__linux__)
+			#if defined(__aarch64__)
 
-        // The `volatile` modifier tells the compiler not to remove or reorder
-        // the inlined assembly block during the compiler optimization step.
+			#elif defined(__arm__)
 
-        // <length suffixes>
-        //     'b'    'w'     's'     'l'     'q'
-        //      8 bit  16 bit  16 bit  32 bit  64 bit  integers
-        //                     32 bit  64 bit          floating point numbers
-
-        // Argument numbers go from top to bottom, from left to right
-        // starting from zero.
-        //
-        //     result           : %<argument number> = %0
-        //     file_descriptor  : ...                = %1
-        //     buffer           :                    = %2
-        //     buffer_size      :                    = %3
-        //     Argument         :                    = %4
-        //     Another_Argument :                    = %5
-
-        // The first quoted letter before the argument in brackets is a
-        // register constraint. It tells the compiler to provide the
-        // argument through that register.
-        //
-        // On X86/-64 the following register constraints are possible
-        // +---+--------------------------+
-        // | r :   any register           |
-        // +---+--------------------------+
-        // | a :   %rax, %eax, %ax, %al   |
-        // | b :   %rbx, %ebx, %bx, %bl   |
-        // | c :   %rcx, %ecx, %cx, %cl   |
-        // | d :   %rdx, %edx, %dx, %dl   |
-        // | S :   %rsi, %esi, %si        |
-        // | D :   %rdi, %edi, %di        |
-        // +---+--------------------------+
-        //
-        // All registers used as input or output arguments should not be
-        // listed as clobbered.
-        //
-        // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-    */
-
-#if defined(__i386__) || defined(__x86_64__)
-    #if defined(__APPLE__)
-        #if defined(__x86_64__)
-
-        #elif defined(__i386__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__x86_64__)
-          long result;
-          asm volatile(
-            "movq $80, %%rax;"
-            "syscall"
-            :"=a" (result)
-        );
-      return result;
-        #elif defined(__i386__)
-
-        #endif
-    #endif
-    return -1;
-#elif defined(__arm__) || defined(__aarch64__)
-    #if defined(__APPLE__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #endif
-    return -1;
-#else
-    return -1;
-#endif
+			#endif
+		#endif
+		return -1;
+	#else
+		return -1;
+	#endif
 }
-long ish_write( //read method using syscall
-        int file_descriptor,
-        void *buffer,
-        unsigned long buffer_size
 
-     )
+int ish_chdir(const char *path)
 {
-    /*
-        // AT&T/UNIX GCC Inline Assembly Sample
+		#if defined(__i386__) || defined(__x86_64__)
+		#if defined(__APPLE__)
+			#if defined(__x86_64__)
 
-        static const char Argument[] =                   // C constants
-            "some data";
-        static const unsigned long Another_Argument =
-            sizeof(Argument);
+			#elif defined(__i386__)
 
-        long result;                                     // a C variable
+			#endif
+		#elif defined(__linux__)
+			#if defined(__x86_64__)
+				int result;
+				__asm__ volatile (
+						"movq &80, %%rax;"
+						"syscall"
+						:"=a" (result)
+				);
+				return result;
+			#elif defined(__i386__)
 
-        __asm__ __volatile__ (
-            "op-code<length suffix> %%src_register, %%dest_register\n\t"
-            "op-code<length suffix> $immediate, %%dest_register\n\t"
-            // ...
-            "op-code<length suffix> %<argument number>, %%dest_register\n\t"
-            "op-code"
-            : "=a" (result)                              // output argument/s
-            : "D" ((unsigned long) file_descriptor),     // input arguments
-              "S" (buffer),
-              "d" (buffer_size),
-              "r" (Argument), "r" (Another_Argument)
-            : "%used register", "%another used register" // clobbered registers
-        );
+			#endif
+		#endif
+		return -1;
+	#elif defined(__arm__) || defined(__aarch64__)
+		#if defined(__APPLE__)
+			#if defined(__aarch64__)
 
-        // `__asm__` and `__volatile__` could also be written as
-        // `asm`     and `volatile`.
+			#elif defined(__arm__)
 
-        // The `volatile` modifier tells the compiler not to remove or reorder
-        // the inlined assembly block during the compiler optimization step.
+			#endif
+		#elif defined(__linux__)
+			#if defined(__aarch64__)
 
-        // <length suffixes>
-        //     'b'    'w'     's'     'l'     'q'
-        //      8 bit  16 bit  16 bit  32 bit  64 bit  integers
-        //                     32 bit  64 bit          floating point numbers
+			#elif defined(__arm__)
 
-        // Argument numbers go from top to bottom, from left to right
-        // starting from zero.
-        //
-        //     result           : %<argument number> = %0
-        //     file_descriptor  : ...                = %1
-        //     buffer           :                    = %2
-        //     buffer_size      :                    = %3
-        //     Argument         :                    = %4
-        //     Another_Argument :                    = %5
-
-        // The first quoted letter before the argument in brackets is a
-        // register constraint. It tells the compiler to provide the
-        // argument through that register.
-        //
-        // On X86/-64 the following register constraints are possible
-        // +---+--------------------------+
-        // | r :   any register           |
-        // +---+--------------------------+
-        // | a :   %rax, %eax, %ax, %al   |
-        // | b :   %rbx, %ebx, %bx, %bl   |
-        // | c :   %rcx, %ecx, %cx, %cl   |
-        // | d :   %rdx, %edx, %dx, %dl   |
-        // | S :   %rsi, %esi, %si        |
-        // | D :   %rdi, %edi, %di        |
-        // +---+--------------------------+
-        //
-        // All registers used as input or output arguments should not be
-        // listed as clobbered.
-        //
-        // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-    */
-
-#if defined(__i386__) || defined(__x86_64__)
-    #if defined(__APPLE__)
-        #if defined(__x86_64__)
-
-        #elif defined(__i386__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__x86_64__)
-          long result;
-          asm volatile(
-            "movq $1, %%rax;"
-            "syscall"
-            :"=a" (result)
-        );
-      return result;
-        #elif defined(__i386__)
-
-        #endif
-    #endif
-    return -1;
-#elif defined(__arm__) || defined(__aarch64__)
-    #if defined(__APPLE__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #endif
-    return -1;
-#else
-    return -1;
-#endif
+			#endif
+		#endif
+		return -1;
+	#else
+		return -1;
+	#endif
 }
-long ish_open( //read method using syscall
-        int file_descriptor,
-        void *buffer,
-        unsigned long buffer_size
 
-     )
-{
-    /*
-        // AT&T/UNIX GCC Inline Assembly Sample
+int ish_stat(const char *path, void *buf) {
+	#if defined(__i386__) || defined(__x86_64__)
+		#if defined(__APPLE__)
+			#if defined(__x86_64__)
 
-        static const char Argument[] =                   // C constants
-            "some data";
-        static const unsigned long Another_Argument =
-            sizeof(Argument);
+			#elif defined(__i386__)
 
-        long result;                                     // a C variable
+			#endif
+		#elif defined(__linux__)
+			#if defined(__x86_64__)
+				int result;
+				__asm__ volatile (
+						"movq &4, %%rax;"
+						"syscall"
+						:"=a" (result)
+				);
+				return result;
+			#elif defined(__i386__)
 
-        __asm__ __volatile__ (
-            "op-code<length suffix> %%src_register, %%dest_register\n\t"
-            "op-code<length suffix> $immediate, %%dest_register\n\t"
-            // ...
-            "op-code<length suffix> %<argument number>, %%dest_register\n\t"
-            "op-code"
-            : "=a" (result)                              // output argument/s
-            : "D" ((unsigned long) file_descriptor),     // input arguments
-              "S" (buffer),
-              "d" (buffer_size),
-              "r" (Argument), "r" (Another_Argument)
-            : "%used register", "%another used register" // clobbered registers
-        );
+			#endif
+		#endif
+		return -1;
+	#elif defined(__arm__) || defined(__aarch64__)
+		#if defined(__APPLE__)
+			#if defined(__aarch64__)
 
-        // `__asm__` and `__volatile__` could also be written as
-        // `asm`     and `volatile`.
+			#elif defined(__arm__)
 
-        // The `volatile` modifier tells the compiler not to remove or reorder
-        // the inlined assembly block during the compiler optimization step.
+			#endif
+		#elif defined(__linux__)
+			#if defined(__aarch64__)
 
-        // <length suffixes>
-        //     'b'    'w'     's'     'l'     'q'
-        //      8 bit  16 bit  16 bit  32 bit  64 bit  integers
-        //                     32 bit  64 bit          floating point numbers
+			#elif defined(__arm__)
 
-        // Argument numbers go from top to bottom, from left to right
-        // starting from zero.
-        //
-        //     result           : %<argument number> = %0
-        //     file_descriptor  : ...                = %1
-        //     buffer           :                    = %2
-        //     buffer_size      :                    = %3
-        //     Argument         :                    = %4
-        //     Another_Argument :                    = %5
-
-        // The first quoted letter before the argument in brackets is a
-        // register constraint. It tells the compiler to provide the
-        // argument through that register.
-        //
-        // On X86/-64 the following register constraints are possible
-        // +---+--------------------------+
-        // | r :   any register           |
-        // +---+--------------------------+
-        // | a :   %rax, %eax, %ax, %al   |
-        // | b :   %rbx, %ebx, %bx, %bl   |
-        // | c :   %rcx, %ecx, %cx, %cl   |
-        // | d :   %rdx, %edx, %dx, %dl   |
-        // | S :   %rsi, %esi, %si        |
-        // | D :   %rdi, %edi, %di        |
-        // +---+--------------------------+
-        //
-        // All registers used as input or output arguments should not be
-        // listed as clobbered.
-        //
-        // https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html
-    */
-
-#if defined(__i386__) || defined(__x86_64__)
-    #if defined(__APPLE__)
-        #if defined(__x86_64__)
-
-        #elif defined(__i386__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__x86_64__)
-          long result;
-          asm volatile(
-            "movq $2, %%rax;"
-            "syscall"
-            :"=a" (result)
-        );
-      return result;
-        #elif defined(__i386__)
-
-        #endif
-    #endif
-    return -1;
-#elif defined(__arm__) || defined(__aarch64__)
-    #if defined(__APPLE__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #elif defined(__linux__)
-        #if defined(__aarch64__)
-
-        #elif defined(__arm__)
-
-        #endif
-    #endif
-    return -1;
-#else
-    return -1;
-#endif
+			#endif
+		#endif
+		return -1;
+	#else
+		return -1;
+	#endif
 }
-/*
-    int ish_chdir(const char *path)
-    {
-        // ...
-    }
-
-    ...
-*/
