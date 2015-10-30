@@ -67,4 +67,20 @@ void ish_exit(int status);
 
 int ish_stat(const char *path, void *buf);
 
+int ish_open(const char *pathname, int flags);
+
+int ish_creat(const char *pathname, mode_t mode);
+
+int ish_dup2(int oldfd, int newfd);
+
+int ish_close(int fd);
+
+pid_t ish_fork(void);
+
+int ish_execve(const char *filename, char *const argv[], char *const envp[]);
+
+pid_t ish_waitpid(pid_t pid, int *status, int options, struct rusage *rusage);
+
+ssize_t ish_write(int fd, const void *buf, size_t count);
+
 #endif
